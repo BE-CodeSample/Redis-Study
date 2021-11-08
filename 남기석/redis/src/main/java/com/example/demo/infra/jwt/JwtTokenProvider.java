@@ -5,8 +5,6 @@ import com.example.demo.infra.errors.ErrorCode;
 import com.example.demo.infra.errors.exception.AuthenticationException;
 import com.example.demo.module.service.AccountService;
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
-import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,7 +15,7 @@ import com.example.demo.module.dto.response.UserResponse;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
-import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 
 
@@ -29,14 +27,11 @@ public class JwtTokenProvider {
     private static final long REFRESH_TOKEN_EXPIRE_TIME = 7 * 24 * 60 * 60 * 1000L;    // 7일
     private final AccountService accountService;
 
-    //시크릿 키 key로 변환
-    private Key key;
 
+    private String secretKey = "secretKey";
     @PostConstruct
     protected void init() {
-        //keyBytes 충분히 길어야한다
-        byte[] keyBytes = Decoders.BASE64.decode("secretKeyNamkiseokYourssuJwtWithRedissecretKeyNamkiseokYourssuJwtWithRedissecretKeyNamkiseokYourssuJwtWithRedissecretKeyNamkiseokYourssuJwtWithRedis");
-        this.key = Keys.hmacShaKeyFor(keyBytes);
+        secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
     }
 
 
@@ -49,13 +44,13 @@ public class JwtTokenProvider {
                 .setClaims(claims)
                 .setIssuedAt(date)
                 .setExpiration(new Date(date.getTime() + ACCESS_TOKEN_EXPIRE_TIME))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(SignatureAlgorithm.HS256,secretKey)
                 .compact();
 
         //refresh Token생성
         String refreshToken = Jwts.builder()
                 .setExpiration(new Date(date.getTime() + REFRESH_TOKEN_EXPIRE_TIME))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(SignatureAlgorithm.HS256,secretKey)
                 .compact();
 
         return UserResponse.TokenInfo.builder()
@@ -74,7 +69,7 @@ public class JwtTokenProvider {
 
     // 토큰에서 회원 정보 추출
     public String getUserPk(String token) {
-        return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody().getSubject();
+        return Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token).getBody().getSubject();
     }
 
     // 요청 헤더 중 X-AUTH-TOKEN헤더에서 토큰 가져온다
@@ -86,16 +81,13 @@ public class JwtTokenProvider {
     //토큰 유효성검사
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
-            return true;
-        } catch (io.jsonwebtoken.security.SecurityException | MalformedJwtException e) {
-            throw new AuthenticationException(ErrorCode.Authenticate_INVALID_Exception.getErrorMessage(), ErrorCode.Authenticate_INVALID_Exception.getErrorCode());
-        } catch (ExpiredJwtException e) {
-            throw new AuthenticationException(ErrorCode.Authenticate_EXPIRED_Exception.getErrorMessage(), ErrorCode.Authenticate_EXPIRED_Exception.getErrorCode());
-        } catch (UnsupportedJwtException e) {
-            throw new AuthenticationException(ErrorCode.Authenticate_UNSUPPORTED_Exception.getErrorMessage(), ErrorCode.Authenticate_UNSUPPORTED_Exception.getErrorCode());
-        } catch (IllegalArgumentException e) {
-            throw new AuthenticationException(ErrorCode.Authenticate_EMPTY_Exception.getErrorMessage(), ErrorCode.Authenticate_EMPTY_Exception.getErrorCode());
+            Jws<Claims> claimsJws = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
+//            if (logoutList.contains(token)) {
+//                return false;
+//            }
+            return !claimsJws.getBody().getExpiration().before(new Date());
+        } catch (Exception e) {
+            return false;
         }
     }
 }

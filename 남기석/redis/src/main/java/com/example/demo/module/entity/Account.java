@@ -1,5 +1,6 @@
 package com.example.demo.module.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,5 +23,6 @@ public class Account {
 
     @Column(unique = true,nullable = false)
     private String username;
+    @JsonIgnore
     private String password;
 }
