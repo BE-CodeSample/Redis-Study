@@ -3,6 +3,7 @@ package com.example.demo.infra.jwt;
 
 
 import com.example.demo.module.service.AccountService;
+import com.example.demo.module.service.CustomUserDetailsService;
 import io.jsonwebtoken.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,7 @@ import java.util.Date;
 public class JwtTokenProvider {
     private static final long ACCESS_TOKEN_EXPIRE_TIME = 30 * 60 * 1000L;              // 30분
     private static final long REFRESH_TOKEN_EXPIRE_TIME = 7 * 24 * 60 * 60 * 1000L;    // 7일
-    private final AccountService accountService;
+    private final CustomUserDetailsService customUserDetailsService;
 
 
     private String secretKey = "secretKey";
@@ -62,7 +63,7 @@ public class JwtTokenProvider {
     // 토큰 인증정보 조회
     public Authentication getAuth(String token) {
         //token에서 username정보 꺼낸 후
-        UserDetails userDetails = accountService.loadUserByUsername(getUserPk(token));
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(getUserPk(token));
         return new UsernamePasswordAuthenticationToken(userDetails, "", userDetails.getAuthorities());
     }
 
