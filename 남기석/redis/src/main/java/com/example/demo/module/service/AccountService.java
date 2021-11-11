@@ -82,7 +82,9 @@ public class AccountService {
 
         // redis에서 username으로 refreshToken가져온다
         String refreshToken = (String) redisTemplate.opsForValue().get("RT:" + auth.getName());
-
+        if (!refreshToken.equals(reissue.getRefreshToken())) {
+            throw new AuthenticationException(ErrorCode.Authenticate_INVALID_Exception.getErrorMessage(), ErrorCode.Authenticate_INVALID_Exception.getErrorCode());
+        }
         // reissue = 즉 refreshToken을 통한 토큰 갱싱
         // 따라서 새로운 토큰 생성해서 재발급
         UserResponse.TokenInfo reissuedTokenInfo = provider.generateToken(auth.getName());
