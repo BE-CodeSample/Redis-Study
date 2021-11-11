@@ -1,6 +1,7 @@
 package com.example.demo.module.controller;
 
 import com.example.demo.infra.jwt.JwtTokenProvider;
+import com.example.demo.module.dto.Reissue;
 import com.example.demo.module.dto.SignUpForm;
 import com.example.demo.module.dto.response.UserResponse;
 import com.example.demo.module.entity.Account;
@@ -28,6 +29,13 @@ public class AccountController {
     public ResponseEntity login(@RequestBody SignUpForm form) {
         Account account = accountService.login(form);
         UserResponse.TokenInfo info = provider.generateToken(account.getUsername());
+        accountService.saveRefreshToken(account,info);
         return ResponseEntity.ok().body(info);
+    }
+
+    @PostMapping("/reissue")
+    public ResponseEntity reissue(@RequestBody Reissue reissue) {
+        // validation
+        return accountService.reissue(reissue);
     }
 }
