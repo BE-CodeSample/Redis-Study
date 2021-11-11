@@ -1,5 +1,6 @@
 package com.example.demo.infra.errors;
 
+import com.example.demo.infra.errors.exception.AuthenticationException;
 import com.example.demo.infra.errors.exception.PasswordNotMatchException;
 import com.example.demo.infra.errors.exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -21,6 +22,13 @@ public class ControllerAdvice {
     public ResponseEntity handlePasswordNotMatch() {
         ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST,
                 ErrorCode.PASSWORD_NOT_MATCH.getErrorCode(), ErrorCode.PASSWORD_NOT_MATCH.getErrorMessage());
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity handleAuthFail() {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST,
+                ErrorCode.Authenticate_INVALID_Exception.getErrorCode(), ErrorCode.Authenticate_INVALID_Exception.getErrorMessage());
         return ResponseEntity.badRequest().body(errorResponse);
     }
 }
