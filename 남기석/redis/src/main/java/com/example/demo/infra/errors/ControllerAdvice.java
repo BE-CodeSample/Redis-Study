@@ -1,6 +1,7 @@
 package com.example.demo.infra.errors;
 
 import com.example.demo.infra.errors.exception.AuthenticationException;
+import com.example.demo.infra.errors.exception.LogOutedException;
 import com.example.demo.infra.errors.exception.PasswordNotMatchException;
 import com.example.demo.infra.errors.exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,13 @@ public class ControllerAdvice {
     public ResponseEntity handleAuthFail() {
         ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST,
                 ErrorCode.Authenticate_INVALID_Exception.getErrorCode(), ErrorCode.Authenticate_INVALID_Exception.getErrorMessage());
+        return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    @ExceptionHandler(LogOutedException.class)
+    public ResponseEntity handleLogOuted() {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST,
+                ErrorCode.LOGOUT_ACCESS_TOKEN.getErrorCode(), ErrorCode.LOGOUT_ACCESS_TOKEN.getErrorMessage());
         return ResponseEntity.badRequest().body(errorResponse);
     }
 }
