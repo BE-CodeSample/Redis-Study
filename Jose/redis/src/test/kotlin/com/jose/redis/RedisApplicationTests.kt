@@ -9,5 +9,4 @@ class RedisApplicationTests {
     @Test
     fun contextLoads() {
     }
-
 }
