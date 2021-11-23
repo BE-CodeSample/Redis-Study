@@ -32,11 +32,4 @@ public class ControllerAdvice {
                 ErrorCode.Authenticate_INVALID_Exception.getErrorCode(), ErrorCode.Authenticate_INVALID_Exception.getErrorMessage());
         return ResponseEntity.badRequest().body(errorResponse);
     }
-
-    @ExceptionHandler(LogOutedException.class)
-    public ResponseEntity handleLogOuted() {
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST,
-                ErrorCode.LOGOUT_ACCESS_TOKEN.getErrorCode(), ErrorCode.LOGOUT_ACCESS_TOKEN.getErrorMessage());
-        return ResponseEntity.badRequest().body(errorResponse);
-    }
 }
