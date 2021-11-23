@@ -1,7 +1,7 @@
 package com.example.demo.module.controller;
 
 import com.example.demo.infra.jwt.JwtTokenProvider;
-import com.example.demo.module.dto.Reissue;
+import com.example.demo.module.dto.Token;
 import com.example.demo.module.dto.SignUpForm;
 import com.example.demo.module.dto.response.UserResponse;
 import com.example.demo.module.entity.Account;
@@ -34,8 +34,14 @@ public class AccountController {
     }
 
     @PostMapping("/reissue")
-    public ResponseEntity reissue(@RequestBody Reissue reissue) {
+    public ResponseEntity reissue(@RequestBody Token token) {
         // validation
-        return accountService.reissue(reissue);
+        return accountService.reissue(token);
+    }
+
+    @PostMapping("/logOut")
+    public ResponseEntity logOut(@RequestBody Token token) {
+        accountService.logOut(token);
+        return ResponseEntity.ok().body("로그아웃 완료");
     }
 }
