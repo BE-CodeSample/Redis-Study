@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 class StringTest : RedisTemplateBaseTest() {
     val key = "string"
     @BeforeEach
-    fun deleteList() {
+    fun deleteString() {
         stringRedisTemplate.delete(key)
     }
     @Test
