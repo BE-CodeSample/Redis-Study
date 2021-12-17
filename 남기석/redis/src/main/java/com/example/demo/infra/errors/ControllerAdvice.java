@@ -1,6 +1,7 @@
 package com.example.demo.infra.errors;
 
 import com.example.demo.infra.errors.exception.AuthenticationException;
+import com.example.demo.infra.errors.exception.LogOutedException;
 import com.example.demo.infra.errors.exception.PasswordNotMatchException;
 import com.example.demo.infra.errors.exception.UserNotFoundException;
 import org.springframework.http.HttpStatus;

@@ -2,27 +2,24 @@ package com.example.demo.module.service;
 
 import com.example.demo.infra.errors.ErrorCode;
 import com.example.demo.infra.errors.exception.AuthenticationException;
+import com.example.demo.infra.errors.exception.LogOutedException;
 import com.example.demo.infra.errors.exception.PasswordNotMatchException;
 import com.example.demo.infra.errors.exception.UserNotFoundException;
 import com.example.demo.infra.jwt.JwtTokenProvider;
-import com.example.demo.module.dto.Reissue;
+import com.example.demo.module.dto.Token;
 import com.example.demo.module.dto.SignUpForm;
 import com.example.demo.module.dto.response.UserResponse;
 import com.example.demo.module.entity.Account;
-import com.example.demo.module.entity.UserAccount;
 import com.example.demo.module.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -53,10 +50,6 @@ public class AccountService {
             throw new PasswordNotMatchException(ErrorCode.PASSWORD_NOT_MATCH.getErrorMessage(),
                     ErrorCode.PASSWORD_NOT_MATCH.getErrorCode());
         }
-
-        //todo 레디스를 활용하여 refreshToken을 레디스에 저장하기
-
-
         return account;
     }
 
@@ -74,15 +67,22 @@ public class AccountService {
          * */
     }
 
-    public ResponseEntity reissue(Reissue reissue) {
-        if (!provider.validateToken(reissue.getAccessToken())) {
+    public ResponseEntity reissue(Token token) {
+        if (!provider.validateToken(token.getAccessToken())) {
             throw new AuthenticationException(ErrorCode.Authenticate_INVALID_Exception.getErrorMessage(), ErrorCode.Authenticate_INVALID_Exception.getErrorCode());
         }
-        Authentication auth = provider.getAuth(reissue.getAccessToken());
+        Authentication auth = provider.getAuth(token.getAccessToken());
 
         // redis에서 username으로 refreshToken가져온다
         String refreshToken = (String) redisTemplate.opsForValue().get("RT:" + auth.getName());
-        if (!refreshToken.equals(reissue.getRefreshToken())) {
+
+        // logout된 유저라면 rt 또한 삭제되었을테니 검증
+        if (ObjectUtils.isEmpty(refreshToken)) {
+            throw new LogOutedException(ErrorCode.LOGOUT_ACCESS_TOKEN.getErrorMessage(),
+                    ErrorCode.LOGOUT_ACCESS_TOKEN.getErrorCode());
+        }
+
+        if (!refreshToken.equals(token.getRefreshToken())) {
             throw new AuthenticationException(ErrorCode.Authenticate_INVALID_Exception.getErrorMessage(), ErrorCode.Authenticate_INVALID_Exception.getErrorCode());
         }
         // reissue = 즉 refreshToken을 통한 토큰 갱싱
@@ -93,5 +93,27 @@ public class AccountService {
         redisTemplate.opsForValue().set("RT" + auth.getName(), reissuedTokenInfo.getRefreshToken(),
                 reissuedTokenInfo.getRefreshTokenExpirationTime(), TimeUnit.MILLISECONDS);
         return ResponseEntity.ok().body(reissuedTokenInfo);
+    }
+
+    public void logOut(Token token) {
+        //validation
+        if (!provider.validateToken(token.getAccessToken())) {
+            throw new AuthenticationException(ErrorCode.Authenticate_INVALID_Exception.getErrorMessage(),
+                    ErrorCode.Authenticate_INVALID_Exception.getErrorCode());
+        }
+
+        // accessToken으로부터 auth 가져온다
+        Authentication auth = provider.getAuth(token.getAccessToken());
+        // auth의 username 가져와서 redis에 저장된 refreshToken 삭제
+        if (redisTemplate.opsForValue().get("RT:" + auth.getName()) != null) {
+            redisTemplate.delete("RT:" + auth.getName());
+        }
+
+        // blackList에 해당 accessToken 추가
+            //먼저 해당 accessToken남은 시간 계산하고
+        Long expiration = provider.getExpiration(token.getAccessToken());
+        //blackList에 추가
+        redisTemplate.opsForValue()
+                .set(token.getAccessToken(), "logout", expiration, TimeUnit.MILLISECONDS);
     }
 }

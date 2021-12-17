@@ -20,8 +20,17 @@
 
 
 - 레디스에 refreshToken 저장 후 토큰 재발급까지 완료
-- todo : 로그아웃 블랙리스트
 
+2. blackList를 통한 로그아웃 
+- 로그아웃은 로그인을 한 상태에서 수행
+- token과 함께 logout요청
+  - 해당 accessToken을 통해 username을 가져오고
+  - 이 username으로 redis에 저장된 refreshToken삭제
+- 해당 accessToken을 redis에 블랙리스트로 저장
+- 따라서 현재 로그아웃된 계정은 
+  - refreshToken은 삭제되었고
+  - accessToken이 블랙리스트로 저장되었다
+- 이 accessToken을 다시 사용하면 jwtFilter에서 걸러진다  
 
 
 참고 : https://wildeveloperetrain.tistory.com/59
