@@ -4,11 +4,13 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.data.redis.core.StringRedisTemplate
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
+import org.springframework.data.redis.repository.configuration.EnableRedisRepositories
 import org.springframework.data.redis.serializer.StringRedisSerializer
 
 @Configuration
+@EnableRedisRepositories
 class RedisConfig(
     @Value("\${spring.redis.host}")
     private val redisHost: String,
@@ -19,19 +21,19 @@ class RedisConfig(
     fun redisConnectionFactory() = LettuceConnectionFactory(redisHost, redisPort)
 
     @Bean
-    fun redisTemplate(): StringRedisTemplate {
+    fun stringRedisTemplate(): StringRedisTemplate {
         val stringRedisTemplate = StringRedisTemplate()
 //        return stringRedisTemplate.apply {
 //            //코틀린에서 추천하는대로 바꾸면 val이기때문에 다시 할당할수 없다고 나온다.
         // 해당 클래스의 모든 변수를 var로 바꿔도 똑같은 오류가 발생한다.
 //            setConnectionFactory(redisConnectionFactory())
 //            keySerializer = StringRedisSerializer()
-//            valueSerializer = GenericJackson2JsonRedisSerializer() }
+//            valueSerializer = StringRedisSerializer() }
 
         // 위의 apply를 다음과 같이 바꿀수 있다.
         stringRedisTemplate.setConnectionFactory(redisConnectionFactory())
         stringRedisTemplate.keySerializer = StringRedisSerializer()
-        stringRedisTemplate.valueSerializer = GenericJackson2JsonRedisSerializer()
+        stringRedisTemplate.valueSerializer = StringRedisSerializer()
         return stringRedisTemplate
     }
 
@@ -44,6 +46,15 @@ class RedisConfig(
 //            //코틀린에서 추천하는대로 바꾸면 redisPort가 val이기때문에 다시 할당할수 없다고 나온다.
 //            setConnectionFactory(redisConnectionFactory())
 //            keySerializer = StringRedisSerializer()
-//            valueSerializer = GenericJackson2JsonRedisSerializer() }
+//            valueSerializer = StringRedisSerializer() }
 //    }
+
+    @Bean
+    fun redisRepositoryTemplate(): RedisTemplate<*, *>? {
+        val redisRepositoryTemplate = RedisTemplate<ByteArray, ByteArray>()
+        redisRepositoryTemplate.setConnectionFactory(redisConnectionFactory())
+        redisRepositoryTemplate.keySerializer = StringRedisSerializer()
+        redisRepositoryTemplate.valueSerializer = StringRedisSerializer()
+        return redisRepositoryTemplate
+    }
 }
