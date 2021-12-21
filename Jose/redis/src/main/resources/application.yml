@@ -5,3 +5,15 @@ spring:
     host: ${REDIS_HOST}
     # 포트는 6379로 한다.
     port: ${REDIS_PORT}
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${DATASOURCE_URL}
+    username: ${DATASOURCE_USERNAME}
+    password: ${DATASOURCE_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: create
+    database: mysql
+    database-platform: org.hibernate.dialect.MySQL5InnoDBDialect
+jwt:
+  secret: ${JWT_SECRET}

@@ -1,4 +1,4 @@
-package com.jose.redis.common
+package com.jose.redis.redisRepository.common
 
 import com.jose.redis.repository.PersonRedisRepository
 import org.springframework.beans.factory.annotation.Autowired

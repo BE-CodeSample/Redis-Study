@@ -1,8 +1,8 @@
 package com.jose.redis.redisRepository
 
-import com.jose.redis.common.RedisRepositoryBaseTest
 import com.jose.redis.entity.Address
 import com.jose.redis.entity.Person
+import com.jose.redis.redisRepository.common.RedisRepositoryBaseTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -23,7 +23,7 @@ class RedisRepositoryTest : RedisRepositoryBaseTest() {
         val savedPerson: Person = personRedisRepository.save(person)
 
         // then
-        val findPerson = personRedisRepository.findById(savedPerson.id!!)
+        val findPerson = personRedisRepository.findById(savedPerson.id)
         assertThat(findPerson.isPresent).isEqualTo(Boolean.TRUE)
         assertThat(findPerson.get().firstName).isEqualTo(person.firstName)
         // 잘 저장되었는지 keys * 로 나온 people:hash값 을 복사한다.
